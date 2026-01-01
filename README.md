@@ -1,9 +1,8 @@
 # Deploy-Kubernetes-Cluster-on-Ubuntu-20.04-with-Contained
-Deploy Kubernetes Cluster on Ubuntu 20.04 with Contained
 
 Step 1. Install containerd
 To install containerd, follow these steps on both VMs:
-	1) Load the br_netfilter module required for networking.
+1) Load the br_netfilter module required for networking.
 
 sudo modprobe overlay
 sudo modprobe br_netfilter
@@ -12,27 +11,34 @@ overlay
 br_netfilter
 EOF
 
-	2) To allow iptables to see bridged traffic, as required by Kubernetes, we need to set the values of certain fields to 1.
+2) To allow iptables to see bridged traffic, as required by Kubernetes, we need to set the values of certain fields to 1.
 
 sudo tee /etc/sysctl.d/kubernetes.conf<<EOF
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
 net.ipv4.ip_forward = 1
 EOF
-	3) Apply the new settings without restarting.
+	
+3) Apply the new settings without restarting.
 sudo sysctl –system
-	4) Install curl.
+	
+4) Install curl.
 sudo apt install curl -y
-	5) Get the apt-key and then add the repository from which we will install containerd.
+	
+5) Get the apt-key and then add the repository from which we will install containerd.
 
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-	6) Update and then install the containerd package.
+	
+6) Update and then install the containerd package.
+
 sudo apt update -y 
 sudo apt install -y containerd.io
-	7) Set up the default configuration file.
+
+7) Set up the default configuration file.
 sudo mkdir -p /etc/containerd
 sudo containerd config default | sudo tee /etc/containerd/config.toml
+
 8) sudo vi /etc/containerd/config.toml
 
 [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
@@ -48,28 +54,25 @@ sudo containerd config default | sudo tee /etc/containerd/config.toml
     ShimCgroup = ""
     SystemdCgroup = true
 
-
 sudo systemctl restart containerd
-
 ps -ef | grep containerd
-
 Expect output similar to this:
 root       63087       1  0 13:16 ?        00:00:00 /usr/bin/containerd
------------------------------------------------------------------------------------------------------------------------------------------------Step 2. Install Kubernetes
+
+Step 2. Install Kubernetes
 
 With our container runtime installed and configured, we are ready to install Kubernetes.
-	1. Add the repository key and the repository.
+1. Add the repository key and the repository.
 
-
- | sudo apt-key add -
+| sudo apt-key add -
 echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
 
  2.  Update your system and install the 3 Kubernetes modules.
-
+    
 sudo apt update -y
 sudo apt install -y kubelet kubeadm kubectl
 
-	3. Set up the firewall by installing the following rules on the master node:
+3. Set up the firewall by installing the following rules on the master node:
 
 sudo ufw allow 6443/tcp
 sudo ufw allow 2379/tcp
@@ -80,54 +83,49 @@ sudo ufw allow 10252/tcp
 sudo ufw allow 10255/tcp
 sudo ufw reload
 
-
-	4. And these rules on the worker node
+4. And these rules on the worker node
 
 sudo ufw allow 10251/tcp
 sudo ufw allow 10255/tcp
 sudo ufw reload
 
 
-	5. Finally, enable the kubelet service on both systems so we can start it
+5. Finally, enable the kubelet service on both systems so we can start it
 sudo systemctl enable kubelet
------------------------------------------------------------------------------------------------------------------------------------------------Step 3. Setting up the cluster
-	1. Run the following command on the master node to allow Kubernetes to fetch the required images before cluster initialization:
+
+Step 3. Setting up the cluster
+
+1. Run the following command on the master node to allow Kubernetes to fetch the required images before cluster initialization:
 sudo kubeadm config images pull
 
  2.  Initialize the First Master Node
 sudo kubeadm init \ --control-plane-endpoint "LOAD_BALANCER_IP:6443" \ --upload-certs \ --pod-network-cidr=10.244.0.0/16 \ --cri-socket unix:///run/containerd/containerd.sock --v=5
 
-	3. Install Calico network plugin:
+3. Install Calico network plugin:
 kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.30.0/manifests/calico.yaml
 
-	4. Install Ingress-NGINX Controller:
-
+4. Install Ingress-NGINX Controller:
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.49.0/deploy/static/provider/baremetal/deploy.yaml
 
-	5. Get the join command and certificate key from the first master node:
+5. Get the join command and certificate key from the first master node:
 kubeadm token create --print-join-command --certificate-key $(kubeadm init phase upload-certs --upload-certs | tail -1)
+
 Step 6: Join the other Master Node
-sudo kubeadm join LOAD_BALANCER_IP:6443 \
-  --token <token> \
-  --discovery-token-ca-cert-hash sha256:<hash> \
-  --control-plane \
-  --certificate-key <certificate-key> \
-  --cri-socket unix:///run/containerd/containerd.sock --v=5
+sudo kubeadm join LOAD_BALANCER_IP:6443 \ --token <token> \ --discovery-token-ca-cert-hash sha256:<hash> \ --control-plane \ --certificate-key <certificate-key> \ --cri-socket unix:///run/containerd/containerd.sock --v=5
 
 
-	6. All the master nodes
+6. All the master nodes
 	
-	mkdir -p $HOME/.kube
-	sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-	sudo chown $(id -u):$(id -g) $HOME/.kube/config
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
 	
 Step 7: Join the Worker Nodes
 Get the join command from the first master node:
 	
 kubeadm token create --print-join-command
 
-
-	8. Run the join command as a root user on each worker node:
+8. Run the join command as a root user on each worker node:
 
 sudo kubeadm join LOAD_BALANCER_IP:6443 \
   --token <token> \
@@ -138,9 +136,3 @@ sudo kubeadm join LOAD_BALANCER_IP:6443 \
 kubectl get nodes
 
 
-
-
-
-
-
-<img width="1174" height="5255" alt="image" src="https://github.com/user-attachments/assets/a0de8959-eab9-4080-bfc7-df85e4c3f74f" />
