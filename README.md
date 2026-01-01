@@ -68,7 +68,8 @@ ps -ef | grep containerd
 ```
 Expect output similar to this:
 root       63087       1  0 13:16 ?        00:00:00 /usr/bin/containerd
------------------------------------------------------------------------------------------------------------------------------------------------Step 2. Install Kubernetes
+-----------------------------------------------------------------------------------------------------------------------------------------------
+# Step 2. Install Kubernetes
 
 With our container runtime installed and configured, we are ready to install Kubernetes.
 	1. Add the repository key and the repository.
@@ -106,7 +107,8 @@ sudo ufw reload
 ```bash
 sudo systemctl enable kubelet
 ```
------------------------------------------------------------------------------------------------------------------------------------------------Step 3. Setting up the cluster
+-----------------------------------------------------------------------------------------------------------------------------------------------
+# Step 3. Setting up the cluster
 	1. Run the following command on the master node to allow Kubernetes to fetch the required images before cluster initialization:
 
 
