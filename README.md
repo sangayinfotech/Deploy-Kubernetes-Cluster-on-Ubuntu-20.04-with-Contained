@@ -140,4 +140,4 @@ kubectl get nodes
 
 
 
-<img width="1174" height="5255" alt="image" src="https://github.com/user-attachments/assets/6ca9504a-9406-421d-83af-db897623428e" />
+
