@@ -1,4 +1,5 @@
-#Step 1. Install containerd
+# Step 1. Install containerd
+
 **To install containerd, follow these steps on both VMs:**
 1) Load the br_netfilter module required for networking.
 
@@ -13,13 +14,17 @@ EOF
 
 2) To allow iptables to see bridged traffic, as required by Kubernetes, we need to set the values of certain fields to 1.
 
+```bash
 sudo tee /etc/sysctl.d/kubernetes.conf<<EOF
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
 net.ipv4.ip_forward = 1
 EOF
-	3) Apply the new settings without restarting.
+```
+
+3) Apply the new settings without restarting.
 sudo sysctl –system
+		
 	4) Install curl.
 sudo apt install curl -y
 	5) Get the apt-key and then add the repository from which we will install containerd.
