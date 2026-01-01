@@ -23,7 +23,7 @@ EOF
 
 3) Apply the new settings without restarting.
 ```bash
-sudo sysctl –system
+sudo sysctl –-system
 ```
 		
 4) Install curl.
