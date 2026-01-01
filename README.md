@@ -2,12 +2,12 @@ Step 1. Install containerd
 To install containerd, follow these steps on both VMs:
 	1) Load the br_netfilter module required for networking.
 
-sudo modprobe overlay
-sudo modprobe br_netfilter
-cat <<EOF | sudo tee /etc/modules-load.d/containerd.conf
-overlay
-br_netfilter
-EOF
+	sudo modprobe overlay
+	sudo modprobe br_netfilter
+	cat <<EOF | sudo tee /etc/modules-load.d/containerd.conf
+	overlay
+	br_netfilter
+	EOF
 
 	2) To allow iptables to see bridged traffic, as required by Kubernetes, we need to set the values of certain fields to 1.
 
