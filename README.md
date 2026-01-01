@@ -108,12 +108,14 @@ Step 3. Setting up the cluster
 -----------------------------------------------------------------------------------------------------------------------------------------------
 Step 3: Join the Other Master Node
 1.Get the join command and certificate key from the first master node:
-	sudo kubeadm join LOAD_BALANCER_IP:6443 \
-	  --token <token> \
-	  --discovery-token-ca-cert-hash sha256:<hash> \
-	  --control-plane \
-	  --certificate-key <certificate-key> \
-	  --cri-socket unix:///run/containerd/containerd.sock --v=5
+sudo modprobe overlay
+sudo modprobe br_netfilter
+
+cat <<EOF | sudo tee /etc/modules-load.d/containerd.conf
+overlay
+br_netfilter
+EOF
+
 
 2. Do all in the master nodes
 	mkdir -p $HOME/.kube
