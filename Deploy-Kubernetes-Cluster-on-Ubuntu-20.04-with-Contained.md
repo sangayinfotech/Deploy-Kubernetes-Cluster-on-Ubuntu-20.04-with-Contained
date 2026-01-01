@@ -140,12 +140,11 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 ```bash
 kubeadm token create --print-join-command --certificate-key $(kubeadm init phase upload-certs --upload-certs | tail -1)
 Step 6: Join the other Master Node
-sudo kubeadm join LOAD_BALANCER_IP:6443 \
-  --token <token> \
-  --discovery-token-ca-cert-hash sha256:<hash> \
-  --control-plane \
-  --certificate-key <certificate-key> \
-  --cri-socket unix:///run/containerd/containerd.sock --v=5
+sudo kubeadm init \
+  --control-plane-endpoint "172.30.30.13:6443" \
+  --upload-certs \
+  --pod-network-cidr=10.244.0.0/16 \
+  --cri-socket unix:///run/containerd/containerd.sock
 ```
 
 6.All the master nodes
