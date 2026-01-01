@@ -139,7 +139,10 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 5.Get the join command and certificate key from the first master node:
 ```bash
 kubeadm token create --print-join-command --certificate-key $(kubeadm init phase upload-certs --upload-certs | tail -1)
+```
+
 Step 6: Join the other Master Node
+```bash
 sudo kubeadm init \
   --control-plane-endpoint "172.30.30.13:6443" \
   --upload-certs \
