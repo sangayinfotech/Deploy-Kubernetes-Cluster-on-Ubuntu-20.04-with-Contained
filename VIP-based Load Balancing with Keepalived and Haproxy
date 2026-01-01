@@ -1,9 +1,1 @@
-# Deploy-Kubernetes-Cluster-on-Ubuntu-20.04-with-Contained
 
-1) Install HAProxy + Keepalived (BOTH LB nodes)
-
- ```bash
-sudo apt update -y
-sudo apt install -y haproxy keepalived
-sudo systemctl enable haproxy keepalived
-```
