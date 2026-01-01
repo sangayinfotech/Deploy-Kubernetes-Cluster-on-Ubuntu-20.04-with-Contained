@@ -1,1 +1,130 @@
+# HAProxy + Keepalived Installation & Configuration
+(High Availability Load Balancer with 1 VIP)
 
+Architecture
+-------------
+LB1 → HAProxy + Keepalived (MASTER)
+LB2 → HAProxy + Keepalived (BACKUP)
+VIP → Floating Virtual IP
+-------------
+Masters → Kubernetes API servers (port 6443)
+
+***Step 1: Install HAProxy & Keepalived***
+(RUN ON BOTH LB1 and LB2)
+
+```bash
+sudo apt update -y
+sudo apt install -y haproxy keepalived
+sudo systemctl enable haproxy keepalived
+```
+
+***Step 2: Configure HAProxy***
+(RUN ON BOTH LB NODES)
+
+```bash
+vi /etc/haproxy/haproxy.cfg 
+```
+```bash
+global
+  log /dev/log local0
+  log /dev/log local1 notice
+  daemon
+  maxconn 2048
+
+defaults
+  log     global
+  mode    tcp
+  option  tcplog
+  timeout connect 10s
+  timeout client  1m
+  timeout server  1m
+
+frontend kubernetes_api
+  bind *:6443
+  default_backend kubernetes_masters
+
+backend kubernetes_masters
+  mode tcp
+  balance roundrobin
+  option tcp-check
+  server master1 MASTER1_IP:6443 check
+  server master2 MASTER2_IP:6443 check
+  server master3 MASTER3_IP:6443 check
+EOF
+```
+
+```bash
+Restart HAProxy
+sudo systemctl restart haproxy
+sudo systemctl status haproxy --no-pager
+```
+
+Step 3A: Keepalived on LB1 (MASTER)
+--------------------------------------
+```bash
+vrrp_script chk_haproxy {
+  script "/etc/keepalived/check_haproxy.sh"
+  interval 2
+  fall 2
+  rise 2
+}
+
+vrrp_instance VI_1 {
+  state MASTER
+  interface eth0
+  virtual_router_id 51
+  priority 200
+  advert_int 1
+
+  authentication {
+    auth_type PASS
+    auth_pass kubeVIP123
+  }
+
+  virtual_ipaddress {
+    VIP_IP/32
+  }
+
+  track_script {
+    chk_haproxy
+  }
+}
+EOF
+```
+
+Step 3B: Keepalived on LB2 (BACKUP)
+
+```bash
+vrrp_script chk_haproxy {
+  script "/etc/keepalived/check_haproxy.sh"
+  interval 2
+  fall 2
+  rise 2
+}
+
+vrrp_instance VI_1 {
+  state BACKUP
+  interface eth0
+  virtual_router_id 51
+  priority 150
+  advert_int 1
+
+  authentication {
+    auth_type PASS
+    auth_pass kubeVIP123
+  }
+
+  virtual_ipaddress {
+    VIP_IP/32
+  }
+
+  track_script {
+    chk_haproxy
+  }
+}
+EOF
+```
+```bash
+sudo systemctl restart keepalived
+sudo systemctl status keepalived --no-pager
+```
