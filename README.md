@@ -15,3 +15,13 @@ This guide installs **containerd**, **Kubernetes (kubelet/kubeadm/kubectl)** and
 ```bash
 sudo swapoff -a
 sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+
+Step 1: Install containerd (Run on ALL nodes)
+1) Load required kernel modules
+sudo modprobe overlay
+sudo modprobe br_netfilter
+
+cat <<EOF | sudo tee /etc/modules-load.d/containerd.conf
+overlay
+br_netfilter
+EOF
