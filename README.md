@@ -165,9 +165,3 @@ sudo kubeadm join LOAD_BALANCER_IP:6443 \
 kubectl get nodes
 ```
 
-
-
-
-
-
-<img width="1174" height="5255" alt="image" src="https://github.com/user-attachments/assets/461336ea-c404-4d63-a756-3ee0f2529210" />
